@@ -1,0 +1,17 @@
+{
+  "equation": "heat",
+  "domain": { "x": [0, 1] },
+  "coefficients": { "alpha": 1 },
+  "boundary": {
+    "left": { "type": "constant", "value": 0 },
+    "right": { "type": "constant", "value": 0 }
+  },
+  "initial": { "value": { "type": "expression", "expression": "sin(pi*x)" } },
+  "discretization": {
+    "nx": 41,
+    "tEnd": 0.1,
+    "dt": 0.001,
+    "dtPolicy": "strict",
+    "snapshots": 5
+  }
+}

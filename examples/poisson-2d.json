@@ -1,0 +1,12 @@
+{
+  "equation": "poisson",
+  "domain": { "x": [0, 1], "y": [0, 1] },
+  "source": { "type": "expression", "expression": "2*pi^2*sin(pi*x)*sin(pi*y)" },
+  "boundary": {
+    "left": { "type": "constant", "value": 0 },
+    "right": { "type": "constant", "value": 0 },
+    "bottom": { "type": "constant", "value": 0 },
+    "top": { "type": "constant", "value": 0 }
+  },
+  "discretization": { "nx": 33, "ny": 33 }
+}

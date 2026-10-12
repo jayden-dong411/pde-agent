@@ -1,0 +1,20 @@
+{
+  "equation": "wave",
+  "domain": { "x": [0, 1] },
+  "coefficients": { "waveSpeed": 1 },
+  "boundary": {
+    "left": { "type": "constant", "value": 0 },
+    "right": { "type": "constant", "value": 0 }
+  },
+  "initial": {
+    "value": { "type": "expression", "expression": "sin(pi*x)" },
+    "velocity": { "type": "constant", "value": 0 }
+  },
+  "discretization": {
+    "nx": 81,
+    "tEnd": 1,
+    "dt": 0.01,
+    "dtPolicy": "strict",
+    "snapshots": 5
+  }
+}

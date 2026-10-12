@@ -1,0 +1,35 @@
+{
+  "name": "pde-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "求解区间和矩形上线性 Poisson、热方程与波动方程的 eve agent",
+  "type": "module",
+  "imports": {
+    "#*": "./agent/*",
+    "#evals/*": "./evals/*"
+  },
+  "scripts": {
+    "build": "eve build",
+    "deploy": "eve deploy",
+    "dev": "eve dev",
+    "eval": "eve eval",
+    "start": "eve start",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "solve": "node --experimental-strip-types scripts/solve.ts",
+    "release": "node --experimental-strip-types scripts/release.ts"
+  },
+  "dependencies": {
+    "@vercel/connect": "2.2.0",
+    "ai": "^7.0.137",
+    "eve": "^0.77.0",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "24.x",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
