@@ -47,4 +47,4 @@ npm run dev
 
 `npm run solve` 直接运行数值求解器，不需要模型密钥。`npm run dev` 启动 eve agent，用自然语言描述方程后，agent 会调用 `solve_pde`。
 
-发布下一版时，更新 `package.json` 的 `version` 和本文件对应的 `## x.y.z` 段落，提交后在干净的工作区运行 `npm run release`。脚本会跑测试、打附注标签 `vX.Y.Z`、推送标签，并用这一节作为 GitHub Release 的说明。
+发布下一版时，更新 `package.json` 的 `version`，并在本文件和 `版本改进.md` 都写上 `## x.y.z` 段落。这两个文件要和代码一起提交。然后在干净的工作区运行 `npm run release`。脚本会跑测试、打附注标签 `vX.Y.Z`、推送标签，用这一节作为 GitHub Release 的说明，并把 `版本改进.md`、`CHANGELOG.md` 和 `README.md` 作为附件上传。

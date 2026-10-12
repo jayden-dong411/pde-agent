@@ -12,9 +12,14 @@ if (!versionPattern.test(version)) {
 
 const tag = `v${version}`;
 const changelog = readFileSync(new URL("../CHANGELOG.md", import.meta.url), "utf8");
+const versionNotes = readFileSync(new URL("../版本改进.md", import.meta.url), "utf8");
 const notes = changelogSection(changelog, version);
+const improvements = changelogSection(versionNotes, version);
 if (!notes) {
-  fail(`CHANGELOG.md 缺少 “## ${version}” 段落。先写下这一版解决了什么、怎么运行，再发布。`);
+  fail(`CHANGELOG.md 缺少 “## ${version}” 段落。先把这一版的改进写进仓库文件并提交，再发布。`);
+}
+if (!improvements) {
+  fail(`版本改进.md 缺少 “## ${version}” 段落。每版改进必须写在这个已提交的文件里，不能只放在 GitHub Release。`);
 }
 
 const dirty = exec("git", ["status", "--porcelain"]).trim();
@@ -34,7 +39,8 @@ execFileSync(process.execPath, ["--experimental-strip-types", "--test", ...testF
 
 const notesFile = join(tmpdir(), `pde-agent-${tag}-notes.md`);
 writeFileSync(notesFile, notes.trim() + "\n");
-console.log(`发布说明已写入 ${notesFile}`);
+const releaseFiles = ["版本改进.md", "CHANGELOG.md", "README.md"];
+console.log(`发布说明来自已提交的 CHANGELOG.md。附件：${releaseFiles.join("、")}`);
 
 exec("git", ["tag", "-a", tag, "-m", tag], true);
 try {
@@ -47,7 +53,7 @@ try {
   const branch = exec("git", ["rev-parse", "--abbrev-ref", "HEAD"]).trim();
   exec(
     "gh",
-    ["release", "create", tag, "--target", branch, "--title", tag, "--notes-file", notesFile],
+    ["release", "create", tag, "--target", branch, "--title", tag, "--notes-file", notesFile, ...releaseFiles],
     true,
   );
 } catch (error) {
