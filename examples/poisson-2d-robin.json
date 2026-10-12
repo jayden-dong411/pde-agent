@@ -1,0 +1,16 @@
+{
+  "equation": "poisson",
+  "domain": { "x": [0, 1], "y": [0, 1] },
+  "source": { "type": "expression", "expression": "-4" },
+  "boundary": {
+    "left": { "type": "expression", "expression": "y^2" },
+    "right": { "type": "neumann", "value": { "type": "constant", "value": 2 } },
+    "bottom": { "type": "expression", "expression": "x^2" },
+    "top": {
+      "type": "robin",
+      "sigma": 2,
+      "value": { "type": "expression", "expression": "2*x^2 + 4" }
+    }
+  },
+  "discretization": { "nx": 21, "ny": 21 }
+}

@@ -67,7 +67,14 @@ function changelogSection(markdown: string, releaseVersion: string): string | nu
 }
 
 function testFiles(): string[] {
-  return ["test/expression.test.ts", "test/poisson.test.ts", "test/heat.test.ts", "test/wave.test.ts", "test/tool.test.ts"];
+  return [
+    "test/expression.test.ts",
+    "test/poisson.test.ts",
+    "test/heat.test.ts",
+    "test/wave.test.ts",
+    "test/boundary.test.ts",
+    "test/tool.test.ts",
+  ];
 }
 
 function exec(command: string, args: string[], inherit = false): string {

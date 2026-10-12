@@ -19,6 +19,10 @@ description: 把用户描述的 Poisson、热方程或波动方程整理成 solv
 - 二维再给 `domain.y`、`ny`、`bottom` 和 `top`。
 - 齐次 Dirichlet 用 `{ "type": "constant", "value": 0 }`。
 - 表达式用 `{ "type": "expression", "expression": "sin(pi*x)" }`。变量是 `x`、`y`、`t`。
+- Neumann 用 `{ "type": "neumann", "value": ... }`，值是外法向导数 ∂u/∂n。
+- Robin 用 `{ "type": "robin", "sigma": 1, "value": ... }`，表示 ∂u/∂n + σ u = g。
+- 左端外法向是 −∂/∂x，右端是 ∂/∂x，下边是 −∂/∂y，上边是 ∂/∂y。
+- 纯 Neumann 的 Poisson 如果用户要固定常数，加 `normalization: { "type": "pin", "value": 0, "x": 0, "y": 0 }`。
 
 ## 离散
 
@@ -84,3 +88,20 @@ description: 把用户描述的 Poisson、热方程或波动方程整理成 solv
 ```
 
 解析解是 cos(π t) sin(πx)。
+
+左端 Neumann、右端 Dirichlet 的 −u'' = (π/2)² cos(πx/2)，u'(0) = 0，u(1) = 0：
+
+```json
+{
+  "equation": "poisson",
+  "domain": { "x": [0, 1] },
+  "source": { "type": "expression", "expression": "(pi/2)^2*cos(pi*x/2)" },
+  "boundary": {
+    "left": { "type": "neumann", "value": { "type": "constant", "value": 0 } },
+    "right": { "type": "constant", "value": 0 }
+  },
+  "discretization": { "nx": 33 }
+}
+```
+
+解析解是 cos(πx/2)。外法向在左端是 −u'，这里 −u'(0) = 0。

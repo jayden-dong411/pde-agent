@@ -1,0 +1,10 @@
+{
+  "equation": "poisson",
+  "domain": { "x": [0, 1] },
+  "source": { "type": "expression", "expression": "(pi/2)^2*cos(pi*x/2)" },
+  "boundary": {
+    "left": { "type": "neumann", "value": { "type": "constant", "value": 0 } },
+    "right": { "type": "constant", "value": 0 }
+  },
+  "discretization": { "nx": 33 }
+}

@@ -1,6 +1,6 @@
 {
   "name": "pde-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "求解区间和矩形上线性 Poisson、热方程与波动方程的 eve agent",
   "type": "module",

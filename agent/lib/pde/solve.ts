@@ -1,4 +1,7 @@
+import { allDirichlet, isPureNeumann } from "./boundary.ts";
+import { PdeError } from "./errors.ts";
 import { explain } from "./explain.ts";
+import { solveGeneral } from "./general.ts";
 import { assertFinite, fieldStats } from "./grid.ts";
 import { solveHeat } from "./heat.ts";
 import { solvePoisson } from "./poisson.ts";
@@ -15,16 +18,27 @@ export type { SolveInput, SolveResult } from "./types.ts";
  * Heat:     u_t = α Δu + f
  * Wave:     u_tt = c² Δu + f
  *
- * Boundary values are Dirichlet. One-dimensional problems omit the y direction.
+ * Dirichlet sides fix the value. Neumann and Robin sides prescribe the outward
+ * derivative, ∂u/∂n + σ u = g, with σ = 0 for Neumann.
+ * One-dimensional problems omit the y direction.
  */
 export function solvePde(input: SolveInput): SolveResult {
   const problem = normalizeProblem(input);
-  const solved =
-    problem.equation === "poisson"
+  if (
+    problem.normalization &&
+    !(problem.equation === "poisson" && isPureNeumann(problem.sides, problem.dimension))
+  ) {
+    throw new PdeError(
+      "normalization 只用于两端或四边都是 Neumann 的 Poisson 方程。其他边界条件下常数已经被定住了。",
+    );
+  }
+  const solved = allDirichlet(problem.sides, problem.dimension)
+    ? problem.equation === "poisson"
       ? solvePoisson(problem)
       : problem.equation === "heat"
         ? solveHeat(problem)
-        : solveWave(problem);
+        : solveWave(problem)
+    : solveGeneral(problem);
   const final = solved.frames[solved.frames.length - 1];
   if (!final) {
     throw new Error("求解器没有返回解场。");

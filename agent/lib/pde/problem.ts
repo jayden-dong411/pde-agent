@@ -1,7 +1,8 @@
+import type { SideCondition, SideSet } from "./boundary.ts";
 import { compileExpression, type ScalarField } from "./expression.ts";
 import { PdeError } from "./errors.ts";
 import type { BoundaryFns } from "./grid.ts";
-import type { DtPolicy, EquationType, FieldSpec, SolveInput } from "./types.ts";
+import type { BoundarySide, DtPolicy, EquationType, FieldSpec, SolveInput } from "./types.ts";
 
 const MAX_NODES = 201;
 const ZERO: ScalarField = () => 0;
@@ -19,6 +20,9 @@ export interface Problem {
   waveSpeed: number;
   source: ScalarField;
   boundary: BoundaryFns;
+  sides: SideSet;
+  /** Pure Neumann Poisson pin. Null means the nodal mean is set to zero when needed. */
+  normalization: { value: number; x: number | null; y: number | null } | null;
   initial: ScalarField | null;
   velocity: ScalarField;
   tEnd: number | null;
@@ -72,7 +76,7 @@ export function normalizeProblem(input: SolveInput): Problem {
   }
 
   if (!input.boundary?.left || !input.boundary?.right) {
-    throw new PdeError("boundary.left 和 boundary.right 都是必需的 Dirichlet 条件。");
+    throw new PdeError("boundary.left 和 boundary.right 都是必需的。");
   }
   if (dimension === 2 && (!input.boundary.bottom || !input.boundary.top)) {
     throw new PdeError("二维问题需要 boundary.bottom 和 boundary.top。");
@@ -81,12 +85,23 @@ export function normalizeProblem(input: SolveInput): Problem {
     throw new PdeError("一维问题不要设置 boundary.bottom 或 boundary.top。");
   }
 
-  const boundary: BoundaryFns = {
-    left: compileField(input.boundary.left, "boundary.left"),
-    right: compileField(input.boundary.right, "boundary.right"),
-    bottom: input.boundary.bottom ? compileField(input.boundary.bottom, "boundary.bottom") : ZERO,
-    top: input.boundary.top ? compileField(input.boundary.top, "boundary.top") : ZERO,
+  const sides: SideSet = {
+    left: normalizeSide(input.boundary.left, "boundary.left"),
+    right: normalizeSide(input.boundary.right, "boundary.right"),
+    bottom: input.boundary.bottom
+      ? normalizeSide(input.boundary.bottom, "boundary.bottom")
+      : { kind: "dirichlet", value: ZERO, sigma: ZERO },
+    top: input.boundary.top
+      ? normalizeSide(input.boundary.top, "boundary.top")
+      : { kind: "dirichlet", value: ZERO, sigma: ZERO },
   };
+  const boundary: BoundaryFns = {
+    left: sides.left.value,
+    right: sides.right.value,
+    bottom: sides.bottom.value,
+    top: sides.top.value,
+  };
+  const normalization = normalizePin(input.normalization);
 
   const ignoredCoefficients: string[] = [];
   const coefficients = input.coefficients ?? {};
@@ -168,6 +183,8 @@ export function normalizeProblem(input: SolveInput): Problem {
     waveSpeed,
     source,
     boundary,
+    sides,
+    normalization,
     initial,
     velocity,
     tEnd,
@@ -177,6 +194,40 @@ export function normalizeProblem(input: SolveInput): Problem {
     dtPolicy,
     ignoredCoefficients,
   };
+}
+
+function normalizeSide(raw: BoundarySide, label: string): SideCondition {
+  if (!raw || typeof raw !== "object" || typeof raw.type !== "string") {
+    throw new PdeError(`${label} 必须给出边界条件。`);
+  }
+  if (raw.type === "constant" || raw.type === "expression") {
+    return { kind: "dirichlet", value: compileField(raw, label), sigma: ZERO };
+  }
+  if (raw.type === "dirichlet" || raw.type === "neumann" || raw.type === "robin") {
+    const value = compileField(raw.value, `${label}.value`);
+    const sigma = raw.type === "robin" ? compileSigma(raw.sigma, `${label}.sigma`) : ZERO;
+    return { kind: raw.type, value, sigma };
+  }
+  throw new PdeError(`${label} 的 type 必须是 constant、expression、dirichlet、neumann 或 robin。`);
+}
+
+function compileSigma(raw: number | FieldSpec | undefined, label: string): ScalarField {
+  if (typeof raw === "number") {
+    const sigma = finiteNumber(raw, label);
+    return () => sigma;
+  }
+  return compileField(raw as FieldSpec, label);
+}
+
+function normalizePin(raw: SolveInput["normalization"]): Problem["normalization"] {
+  if (raw === undefined) return null;
+  if (!raw || raw.type !== "pin") {
+    throw new PdeError('normalization 目前只支持 { type: "pin", value }。');
+  }
+  const value = finiteNumber(raw.value, "normalization.value");
+  const x = raw.x === undefined ? null : finiteNumber(raw.x, "normalization.x");
+  const y = raw.y === undefined ? null : finiteNumber(raw.y, "normalization.y");
+  return { value, x, y };
 }
 
 export function compileField(spec: FieldSpec, label: string): ScalarField {

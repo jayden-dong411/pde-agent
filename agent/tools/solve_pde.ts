@@ -15,6 +15,17 @@ const fieldSchema = z
   ])
   .describe("常数，或关于 x、y、t 的表达式。支持 + - * / ^、括号，以及 sin、cos、tan、exp、log、ln、sqrt、abs、min、max、pow 和常数 pi、e。");
 
+const sideSchema = z.union([
+  fieldSchema,
+  z.object({ type: z.literal("dirichlet"), value: fieldSchema }),
+  z.object({ type: z.literal("neumann"), value: fieldSchema }),
+  z.object({
+    type: z.literal("robin"),
+    sigma: z.union([z.number(), fieldSchema]),
+    value: fieldSchema,
+  }),
+]).describe("省略 kind 时视为 Dirichlet。Neumann 与 Robin 使用外法向：∂u/∂n + σ u = g，Neumann 的 σ 为 0。");
+
 const solveInputSchema = z.object({
   equation: z.enum(["poisson", "heat", "wave"]).describe("poisson：−Δu = f；heat：u_t = α Δu + f；wave：u_tt = c² Δu + f。"),
   domain: z.object({
@@ -29,11 +40,20 @@ const solveInputSchema = z.object({
     .optional(),
   source: fieldSchema.optional().describe("右端项 f。Poisson 方程必须提供。热方程和波动方程省略时视为 0。"),
   boundary: z.object({
-    left: fieldSchema.describe("x = xmin 上的 Dirichlet 值。"),
-    right: fieldSchema.describe("x = xmax 上的 Dirichlet 值。"),
-    bottom: fieldSchema.optional().describe("二维问题 y = ymin 上的 Dirichlet 值。"),
-    top: fieldSchema.optional().describe("二维问题 y = ymax 上的 Dirichlet 值。"),
+    left: sideSchema.describe("x = xmin。外法向是 −∂/∂x。"),
+    right: sideSchema.describe("x = xmax。外法向是 ∂/∂x。"),
+    bottom: sideSchema.optional().describe("二维问题 y = ymin。外法向是 −∂/∂y。"),
+    top: sideSchema.optional().describe("二维问题 y = ymax。外法向是 ∂/∂y。"),
   }),
+  normalization: z
+    .object({
+      type: z.literal("pin"),
+      value: z.number(),
+      x: z.number().optional(),
+      y: z.number().optional(),
+    })
+    .optional()
+    .describe("仅纯 Neumann 的 Poisson：把解平移到指定节点的值。省略时把节点平均值平移到 0。"),
   initial: z
     .object({
       value: fieldSchema.describe("u 在 t = 0 的值。"),
@@ -56,7 +76,7 @@ const solveInputSchema = z.object({
 
 export default defineTool({
   description:
-    "在区间或矩形上求解线性 Poisson、热方程或波动方程，返回网格解、使用的数值方法和简短说明。定常问题用 poisson（−Δu = f）；演化问题用 heat（u_t = α Δu + f）或 wave（u_tt = c² Δu + f）。边界一律是 Dirichlet。不要自行编造网格值，数值结果以这个工具返回的 frames 最后一帧为准。",
+    "在区间或矩形上求解线性 Poisson、热方程或波动方程，返回网格解、使用的数值方法和简短说明。定常问题用 poisson（−Δu = f）；演化问题用 heat（u_t = α Δu + f）或 wave（u_tt = c² Δu + f）。边界可以是 Dirichlet、外法向 Neumann，或 Robin 条件 ∂u/∂n + σ u = g。不要自行编造网格值，数值结果以这个工具返回的 frames 最后一帧为准。",
   inputSchema: solveInputSchema,
   execute(input): SolveResult {
     return solvePde(input as SolveInput);

@@ -5,11 +5,25 @@ export type FieldSpec =
   | { type: "constant"; value: number }
   | { type: "expression"; expression: string };
 
+export type BoundarySide =
+  | FieldSpec
+  | { type: "dirichlet"; value: FieldSpec }
+  | { type: "neumann"; value: FieldSpec }
+  | { type: "robin"; sigma: number | FieldSpec; value: FieldSpec };
+
 export interface BoundarySpec {
-  left: FieldSpec;
-  right: FieldSpec;
-  bottom?: FieldSpec;
-  top?: FieldSpec;
+  left: BoundarySide;
+  right: BoundarySide;
+  bottom?: BoundarySide;
+  top?: BoundarySide;
+}
+
+/** Removes the additive constant in a pure Neumann Poisson problem. */
+export interface Normalization {
+  type: "pin";
+  value: number;
+  x?: number;
+  y?: number;
 }
 
 export interface SolveInput {
@@ -28,6 +42,7 @@ export interface SolveInput {
     value: FieldSpec;
     velocity?: FieldSpec;
   };
+  normalization?: Normalization;
   discretization: {
     nx: number;
     ny?: number;
