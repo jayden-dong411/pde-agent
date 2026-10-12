@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -39,8 +39,8 @@ execFileSync(process.execPath, ["--experimental-strip-types", "--test", ...testF
 
 const notesFile = join(tmpdir(), `pde-agent-${tag}-notes.md`);
 writeFileSync(notesFile, notes.trim() + "\n");
-const releaseFiles = ["版本改进.md", "CHANGELOG.md", "README.md"];
-console.log(`发布说明来自已提交的 CHANGELOG.md。附件：${releaseFiles.join("、")}`);
+const releaseFiles = ["CHANGELOG.md", "README.md"];
+console.log("发布说明来自已提交的 CHANGELOG.md。附件：版本改进.md、CHANGELOG.md、README.md");
 
 exec("git", ["tag", "-a", tag, "-m", tag], true);
 try {
@@ -56,6 +56,7 @@ try {
     ["release", "create", tag, "--target", branch, "--title", tag, "--notes-file", notesFile, ...releaseFiles],
     true,
   );
+  uploadVersionNotes(tag);
 } catch (error) {
   fail(
     `标签 ${tag} 已经创建并推送，但 GitHub Release 没有创建成功。发布说明在 ${notesFile}，也可以直接用 CHANGELOG.md 里的 ${version} 段落。\n${errorText(error)}`,
@@ -63,6 +64,12 @@ try {
 }
 
 console.log(`已发布 ${tag}。`);
+
+function uploadVersionNotes(releaseTag: string): void {
+  const asset = join(tmpdir(), "version-notes.md");
+  copyFileSync(new URL("../版本改进.md", import.meta.url), asset);
+  exec("gh", ["release", "upload", releaseTag, `${asset}#版本改进.md`, "--clobber"], true);
+}
 
 function changelogSection(markdown: string, releaseVersion: string): string | null {
   const marker = `## ${releaseVersion}`;
