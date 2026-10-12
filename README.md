@@ -109,7 +109,7 @@ npm run dev
 ```bash
 curl -X POST http://127.0.0.1:2000/eve/v1/session \
   -H 'content-type: application/json' \
-  -d '{"message":"在 [0,1] 上求解 −u''=(π/2)² cos(πx/2)，左端 Neumann 为 0，右端 Dirichlet 为 0。"}'
+  -d '{"message":"在单位区间上求解 Poisson 方程，源项 (pi/2)^2*cos(pi*x/2)，左端 Neumann 为 0，右端 Dirichlet 为 0。"}'
 ```
 
 接着用返回的 `sessionId` 读取 `GET /eve/v1/session/<sessionId>/stream`。
