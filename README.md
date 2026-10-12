@@ -163,7 +163,7 @@ npm run typecheck
 3. 把这两个文件和代码一起提交并推送。
 4. 在干净的工作区运行 `npm run release`。
 
-`npm run release` 会先跑测试，再创建附注标签 `vX.Y.Z`，推送标签，用 `CHANGELOG.md` 里的对应段落作为 Release 正文，并把已提交的 `版本改进.md`、`CHANGELOG.md` 和 `README.md` 作为附件上传。标签已存在、工作区不干净，或这两个说明文件缺少该版本时，脚本会停下来。
+`npm run release` 会先跑测试，再创建附注标签 `vX.Y.Z`，推送标签，用 `CHANGELOG.md` 里的对应段落作为 Release 正文，并把已提交的 `版本改进.md`、`CHANGELOG.md` 和 `README.md` 作为附件上传。GitHub 附件里的版本说明文件名是 `version-notes.md`，内容就是仓库里的 `版本改进.md`。标签已存在、工作区不干净，或这两个说明文件缺少该版本时，脚本会停下来。
 
 ## 限制
 
